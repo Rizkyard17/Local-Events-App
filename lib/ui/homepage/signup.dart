@@ -117,7 +117,7 @@ class _SignupPageState extends State<SignupPage> {
                         height: screenHeight * 0.3,
                         width: screenWidth * 0.6,
                         child: Image.asset(
-                          'assets/event_images/community_event.jpeg', // Gambar ilustrasi
+                          'assets/logo/signup.png', // Gambar ilustrasi
                           fit: BoxFit.contain,
                         ),
                       ),

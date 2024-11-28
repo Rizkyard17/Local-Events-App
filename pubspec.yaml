@@ -80,6 +80,8 @@ flutter:
     - assets/design.png
     - assets/success.json
     - assets/sending.json
+    - assets/logo/logo.png
+    - assets/logo/signup.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

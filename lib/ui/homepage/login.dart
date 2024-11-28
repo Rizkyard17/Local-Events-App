@@ -147,11 +147,7 @@ class _LoginPageState extends State<LoginPage> {
           // Background Gradient
           Container(
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF78B3CE)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: Color(0xFF78B3CE)
             ),
           ),
           SafeArea(
@@ -165,12 +161,12 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       // Illustration or Logo
                       Image.asset(
-                        'assets/event_images/5_km_downtown_run.jpeg',
+                        'assets/logo/logo.png',
                         height: 150,
                       ),
                       const SizedBox(height: 24),
                       const Text(
-                        "Welcome Back!",
+                        "Welcome!",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 32,
@@ -203,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                       // Login Button
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF78B3CE),
+                          backgroundColor: Colors.white,
                           minimumSize: const Size(200, 48),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
@@ -212,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
                         onPressed: _login,
                         child: const Text(
                           "Log In",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
+                          style: TextStyle(fontSize: 18, color: Color(0xFF78B3CE) ),
                         ),
                       ),
                       const SizedBox(height: 16),
