@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:local_events_app/styleguide.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login.dart';
 
 class AccountPage extends StatelessWidget {
+  final User? user = FirebaseAuth.instance.currentUser;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,7 +89,7 @@ class AccountPage extends StatelessWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    "rizky.ardiansyah@gmail.com", // Email pengguna
+                    user!.email ?? "No Email", // Email pengguna
                     style: fadedTextStyle,
                   ),
                   SizedBox(height: 32),

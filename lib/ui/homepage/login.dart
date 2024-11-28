@@ -15,92 +15,145 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<void> _login() async {
-  // Unfocus keyboard
-  FocusScope.of(context).unfocus();
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
 
-  // Tampilkan loading spinner
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
+    // Validasi input kosong
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Email dan Password tidak boleh kosong!")),
+      );
+      return;
+    }
 
-  try {
-    await _auth.signInWithEmailAndPassword(
-      email: _emailController.text,
-      password: _passwordController.text,
-    );
+    // Fokus keluar dari keyboard
+    FocusScope.of(context).unfocus();
 
-    // Tutup loading spinner
-    Navigator.of(context).pop();
-
-    // Tampilkan animasi Lottie sebagai konfirmasi login sukses
+    // Tampilkan loading spinner
     showDialog(
       context: context,
-      barrierDismissible: false, // Dialog tidak dapat ditutup dengan klik luar
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Animasi Lottie
-            Lottie.asset(
-              'assets/Animation - 1732808536233.json', // Path ke file animasi
-              height: 150,
-              repeat: false,
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Login Berhasil',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
       ),
     );
 
-    // Tunggu animasi selesai (sekitar 2 detik, tergantung durasi animasi)
-    Future.delayed(const Duration(seconds: 2), () {
-      // Tutup dialog animasi
+    try {
+      // Login pengguna
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      User? user = userCredential.user;
+
+      // Periksa apakah pengguna telah memverifikasi email
+      if (user != null && !user.emailVerified) {
+        // Tutup loading spinner
+        Navigator.of(context).pop();
+        _showVerificationDialog(user);
+        return;
+      }
+
+      // Tutup loading spinner
       Navigator.of(context).pop();
 
-      // Arahkan pengguna ke HomePage
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    });
-
+      // Tampilkan animasi Lottie sebagai konfirmasi login sukses
+      _showLoginSuccessAnimation();
     } catch (e) {
       // Tutup loading spinner jika terjadi error
       Navigator.of(context).pop();
 
       // Tampilkan pesan error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Gagal: ${e.toString()}')),
+        SnackBar(content: Text("Login Gagal: ${e.toString()}")),
       );
     }
   }
 
+  void _showVerificationDialog(User user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Email Belum Diverifikasi"),
+        content: Text(
+          "Email Anda belum diverifikasi. Silakan cek email Anda untuk memverifikasi akun.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              try {
+                await user.sendEmailVerification();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Email verifikasi telah dikirim!")),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Error: ${e.toString()}")),
+                );
+              }
+              Navigator.pop(context);
+            },
+            child: Text("Kirim Ulang Email"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text("Batal"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLoginSuccessAnimation() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Lottie.asset(
+              'assets/success.json',
+              height: 150,
+              repeat: false,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Login Berhasil',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.of(context).pop(); // Tutup dialog animasi
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Scaffold(
       body: Stack(
         children: [
           // Background Gradient
           Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF78B3CE), // Background color
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF78B3CE)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
           ),
-          // Content
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -111,17 +164,12 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // Illustration or Logo
-                      Container(
-                        height: screenHeight * 0.3,
-                        width: screenWidth * 0.6,
-                        child: Image.asset(
-                          'assets/event_images/5_km_downtown_run.jpeg', // Your illustration path
-                          fit: BoxFit.contain,
-                        ),
+                      Image.asset(
+                        'assets/event_images/5_km_downtown_run.jpeg',
+                        height: 150,
                       ),
-                      SizedBox(height: 24),
-                      // Title
-                      Text(
+                      const SizedBox(height: 24),
+                      const Text(
                         "Welcome Back!",
                         style: TextStyle(
                           color: Colors.white,
@@ -130,74 +178,53 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 8),
-                      Text(
+                      const SizedBox(height: 8),
+                      const Text(
                         "Log in to explore local events near you",
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 16,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
                       // Email Input
-                      TextFormField(
+                      _buildTextField(
                         controller: _emailController,
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.email, color: Color(0xFF78B3CE)),
-                          hintText: "Email",
-                          hintStyle: TextStyle(color: Color(0xFF78B3CE)),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.9),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
+                        hintText: "Email",
+                        icon: Icons.email,
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       // Password Input
-                      TextFormField(
+                      _buildTextField(
                         controller: _passwordController,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.lock, color: Color(0xFF78B3CE)),
-                          hintText: "Password",
-                          hintStyle: TextStyle(color: Color(0xFF78B3CE)),
-                          filled: true,
-                          fillColor: Colors.white.withOpacity(0.9),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                        ),
+                        hintText: "Password",
+                        icon: Icons.lock,
+                        isPassword: true,
                       ),
-                      SizedBox(height: 32),
+                      const SizedBox(height: 32),
                       // Login Button
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF78B3CE),
-                          minimumSize: Size(200, 48), // Width 200, height 48
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: const Color(0xFF78B3CE),
+                          minimumSize: const Size(200, 48),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
-                            side: BorderSide(color: Colors.white),
                           ),
                         ),
                         onPressed: _login,
-                        child: Text(
+                        child: const Text(
                           "Log In",
                           style: TextStyle(fontSize: 18, color: Colors.white),
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       // Forgot Password or Sign Up Text
                       TextButton(
-                        onPressed: (){
-                          Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignupPage()),
-                        );
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SignupPage()),
+                          );
                         },
-                        child: Text(
+                        child: const Text(
                           "Forgot Password? | Sign Up",
                           style: TextStyle(color: Colors.white70),
                         ),
@@ -209,6 +236,28 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    bool isPassword = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: const Color(0xFF78B3CE)),
+        hintText: hintText,
+        hintStyle: const TextStyle(color: Color(0xFF78B3CE)),
+        filled: true,
+        fillColor: Colors.white.withOpacity(0.9),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8.0),
+        ),
       ),
     );
   }

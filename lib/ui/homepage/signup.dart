@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lottie/lottie.dart';
 import 'login.dart';
-import 'home_page.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -9,13 +9,21 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
-  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<void> _signup() async {
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Email dan Password tidak boleh kosong!")),
+      );
+      return;
+    }
     // Validasi password
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -31,19 +39,25 @@ class _SignupPageState extends State<SignupPage> {
         password: _passwordController.text.trim(),
       );
 
-      // Update profil pengguna dengan nama (opsional)
-      await userCredential.user?.updateProfile(
-        displayName: _nameController.text.trim(),
-      );
+      // Kirim email verifikasi
+      User? user = userCredential.user;
+      if (user != null && !user.emailVerified) {
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Akun berhasil dibuat')),
-      );
+        await user.sendEmailVerification();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Email verifikasi telah dikirim!")),
+        );
+      }
+
+      // Update profil pengguna dengan nama (opsional)
+      // await userCredential.user?.updateProfile(
+      //   displayName: _nameController.text.trim(),
+      // );
 
       // Navigasi ke halaman home setelah signup berhasil
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomePage()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } on FirebaseAuthException catch (e) {
       // Tangani error spesifik dari Firebase Auth
@@ -65,6 +79,7 @@ class _SignupPageState extends State<SignupPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage)),
       );
+      
     } catch (e) {
       // Tangani error lainnya
       ScaffoldMessenger.of(context).showSnackBar(
@@ -194,6 +209,7 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                       ),
                       SizedBox(height: 16),
+
                       // Opsi Login
                       TextButton(
                         onPressed: (){
@@ -207,6 +223,7 @@ class _SignupPageState extends State<SignupPage> {
                           style: TextStyle(color: Colors.white70),
                         ),
                       ),
+                      // Animasi Lottie untuk verifikasi email
                     ],
                   ),
                 ),
@@ -221,7 +238,6 @@ class _SignupPageState extends State<SignupPage> {
   @override
   void dispose() {
     // Bersihkan kontroler
-    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
