@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "506102439259",
+    "project_id": "localeventsapp-10d0d",
+    "storage_bucket": "localeventsapp-10d0d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506102439259:android:cc3cede62e85a2f4c18e7e",
+        "android_client_info": {
+          "package_name": "com.e"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwiorqBO0yl5XDsaivDt-F3w9oJEhaKNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506102439259:android:cd1b7eec5e08a52ac18e7e",
+        "android_client_info": {
+          "package_name": "com.example.local_events_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwiorqBO0yl5XDsaivDt-F3w9oJEhaKNw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
