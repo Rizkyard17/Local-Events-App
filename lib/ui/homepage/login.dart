@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:lottie/lottie.dart';
 import 'home_page.dart';
 import 'signup.dart';
 
@@ -14,22 +15,73 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<void> _login() async {
-    try {
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login berhasil')),
-      );
-      // Navigate to the next page
+  // Unfocus keyboard
+  FocusScope.of(context).unfocus();
+
+  // Tampilkan loading spinner
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+
+  try {
+    await _auth.signInWithEmailAndPassword(
+      email: _emailController.text,
+      password: _passwordController.text,
+    );
+
+    // Tutup loading spinner
+    Navigator.of(context).pop();
+
+    // Tampilkan animasi Lottie sebagai konfirmasi login sukses
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Dialog tidak dapat ditutup dengan klik luar
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Animasi Lottie
+            Lottie.asset(
+              'assets/Animation - 1732808536233.json', // Path ke file animasi
+              height: 150,
+              repeat: false,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Login Berhasil',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Tunggu animasi selesai (sekitar 2 detik, tergantung durasi animasi)
+    Future.delayed(const Duration(seconds: 2), () {
+      // Tutup dialog animasi
+      Navigator.of(context).pop();
+
+      // Arahkan pengguna ke HomePage
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
       );
+    });
+
     } catch (e) {
+      // Tutup loading spinner jika terjadi error
+      Navigator.of(context).pop();
+
+      // Tampilkan pesan error
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        SnackBar(content: Text('Login Gagal: ${e.toString()}')),
       );
     }
   }

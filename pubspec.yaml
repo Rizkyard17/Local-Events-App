@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.0.5
   firebase_auth: ^5.3.3
+  lottie: ^2.7.0
 
 dev_dependencies:
   flutter_test:
@@ -77,6 +78,7 @@ flutter:
     - assets/guest_image/guest5.jpg
     - assets/guest_image/guest6.jpg
     - assets/design.png
+    - assets/Animation - 1732808536233.json
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

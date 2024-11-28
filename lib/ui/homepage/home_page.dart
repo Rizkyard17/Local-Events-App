@@ -12,6 +12,7 @@ import 'home_page_background.dart';
 import 'account_page.dart'; // Impor halaman akun
 
 class HomePage extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
