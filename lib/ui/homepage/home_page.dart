@@ -33,22 +33,18 @@ class HomePage extends StatelessWidget {
                       child: Row(
                         children: <Widget>[
                           Text(
-                            "LOCAL EVENTS",
+                            "",
                             style: fadedTextStyle,
                           ),
                           Spacer(),
                           GestureDetector(
                             onTap: () {
                               // Navigasi ke halaman akun
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => AccountPage(), // Panggil widget dari account_page.dart
-                                ),
-                              );
+                              Navigator.pushNamed(context, '/AccountPage');
                             },
                             child: Icon(
                               Icons.person_outline,
-                              color: Color(0x99FFFFFF),
+                              color: Colors.white,
                               size: 30,
                             ),
                           ),

@@ -1,10 +1,28 @@
+// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:local_events_app/styleguide.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:local_events_app/ui/homepage/EditProfile.dart';
+// import 'package:image_picker/image_picker.dart';
 import 'login.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
+  @override
+  _AccountPage createState() => _AccountPage();
+}
+
+class _AccountPage extends State<AccountPage> {
   final User? user = FirebaseAuth.instance.currentUser;
+
+  bool light1 = false;
+
+  void _reloadUserInfo() {
+    setState(() {
+      // Re-fetch user info after update
+      // This triggers a rebuild with the updated username
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,7 +43,7 @@ class AccountPage extends StatelessWidget {
                       children: <Widget>[
                         GestureDetector(
                           onTap: () {
-                            Navigator.pop(context); // Navigasi kembali ke halaman sebelumnya
+                            Navigator.pushNamed(context, '/HomePage'); // Navigasi kembali ke halaman sebelumnya
                           },
                           child: Icon(
                             Icons.arrow_back,
@@ -36,61 +54,26 @@ class AccountPage extends StatelessWidget {
                         Spacer(),
                         Text(
                           "Akun Saya",
-                          style: fadedTextStyle.copyWith(fontSize: 20, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: Colors.white).copyWith(fontSize: 30, fontWeight: FontWeight.bold),
                         ),
                         Spacer(),
-                        // PopupMenuButton untuk dropdown menu
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            // Logika untuk setiap menu item
-                            if (value == 'Settings') {
-                              // Navigasi ke halaman pengaturan
-                              print("Navigasi ke Pengaturan");
-                            } else if (value == 'Help') {
-                              // Navigasi ke halaman bantuan
-                              print("Navigasi ke Bantuan");
-                            } else if (value == 'Info') {
-                              // Navigasi ke halaman info
-                              print("Navigasi ke Info");
-                            }
-                          },
-                          icon: Icon(
-                            Icons.settings,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                            PopupMenuItem<String>(
-                              value: 'Settings',
-                              child: Text('Pengaturan'),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'Help',
-                              child: Text('Bantuan'),
-                            ),
-                            PopupMenuItem<String>(
-                              value: 'Info',
-                              child: Text('Info'),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
                   SizedBox(height: 20),
                   CircleAvatar(
-                    radius: 60,
-                    backgroundImage: AssetImage("assets/images/profile_picture.png"), // Ganti dengan path gambar profil
+                    radius: 60
                   ),
                   SizedBox(height: 16),
+                  // Display updated username
                   Text(
-                    "M. Rizky Ardiansyah Putra",
+                    user!.displayName ?? "No Username",
                     style: whiteHeadingTextStyle.copyWith(fontSize: 24),
                   ),
                   SizedBox(height: 8),
                   Text(
-                    user!.email ?? "No Email", // Email pengguna
-                    style: fadedTextStyle,
+                    user?.email ?? "No Email", // Email pengguna
+                    style: TextStyle(color: Colors.white),
                   ),
                   SizedBox(height: 32),
                   Padding(
@@ -102,7 +85,9 @@ class AccountPage extends StatelessWidget {
                           icon: Icons.edit,
                           label: "Edit Profil",
                           onTap: () {
-                            // Tambahkan navigasi ke halaman Edit Profil
+                            Navigator.pushNamed(context, '/EditProfilePage').then((_) {
+                              _reloadUserInfo(); // Refresh user info after edit
+                            });
                           },
                         ),
                         _buildAccountOption(
@@ -113,14 +98,7 @@ class AccountPage extends StatelessWidget {
                             // Tambahkan navigasi ke halaman Ubah Kata Sandi
                           },
                         ),
-                        _buildAccountOption(
-                          context,
-                          icon: Icons.notifications,
-                          label: "Notifikasi",
-                          onTap: () {
-                            // Tambahkan navigasi ke halaman Notifikasi
-                          },
-                        ),
+                        _buildNotificationOption(),
                         _buildAccountOption(
                           context,
                           icon: Icons.info,
@@ -143,7 +121,6 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  // Widget untuk opsi menu
   Widget _buildAccountOption(BuildContext context, {required IconData icon, required String label, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
@@ -170,11 +147,9 @@ class AccountPage extends StatelessWidget {
     );
   }
 
-  // Tombol untuk keluar
   Widget _buildLogoutButton(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Tambahkan logika untuk keluar
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -189,11 +164,7 @@ class AccountPage extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  // Logika keluar aplikasi
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginPage())
-                    ); // Tutup dialog
+                  Navigator.pushNamed(context, '/LoginPage');
                 },
                 child: Text("Keluar"),
               ),
@@ -219,6 +190,36 @@ class AccountPage extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationOption() {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.notifications, color: Colors.white),
+          SizedBox(width: 10),
+          Text(
+            "Notifikasi",
+            style: whiteHeadingTextStyle.copyWith(fontSize: 16),
+          ),
+          Spacer(),
+          Switch(
+            value: light1,
+            onChanged: (bool value) {
+              setState(() {
+                light1 = value;
+              });
+            },
+          ),
+        ],
       ),
     );
   }

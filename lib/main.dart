@@ -1,7 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:local_events_app/ui/homepage/account_page.dart';
+import 'package:local_events_app/ui/homepage/home_page.dart';
+// import 'package:local_events_app/ui/homepage/account_page.dart';
+import 'package:local_events_app/ui/homepage/login.dart';
+import 'package:local_events_app/ui/homepage/signup.dart';
+import 'package:local_events_app/ui/homepage/EditProfile.dart';
 import 'firebase_options.dart';
-import 'ui/homepage/login.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +24,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Local Events',
+      routes: {
+        '/AccountPage': (context) => AccountPage(),
+        '/HomePage': (context) => HomePage(),
+        '/SignupPage' : (context) => SignupPage(),
+        '/EditProfilePage' : (context) => EditProfilePage(),
+        '/LoginPage' : (context) => LoginPage(),
+      },
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // This is the theme of your application.

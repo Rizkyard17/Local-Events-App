@@ -50,13 +50,9 @@ class _LoginPageState extends State<LoginPage> {
       // Periksa apakah pengguna telah memverifikasi email
       if (user != null && !user.emailVerified) {
         // Tutup loading spinner
-        Navigator.of(context).pop();
         _showVerificationDialog(user);
         return;
       }
-
-      // Tutup loading spinner
-      Navigator.of(context).pop();
 
       // Tampilkan animasi Lottie sebagai konfirmasi login sukses
       _showLoginSuccessAnimation();
@@ -131,11 +127,7 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop(); // Tutup dialog animasi
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
+      Navigator.pushNamed(context, '/HomePage');
     });
   }
 
@@ -215,10 +207,7 @@ class _LoginPageState extends State<LoginPage> {
                       // Forgot Password or Sign Up Text
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => SignupPage()),
-                          );
+                          Navigator.pushNamed(context, '/SignupPage');
                         },
                         child: const Text(
                           "Forgot Password? | Sign Up",
