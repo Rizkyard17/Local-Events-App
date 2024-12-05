@@ -9,7 +9,6 @@ import '../../app_state.dart';
 import 'category_widget.dart';
 import 'event_widget.dart';
 import 'home_page_background.dart';
-import 'account_page.dart'; // Impor halaman akun
 
 class HomePage extends StatelessWidget {
 

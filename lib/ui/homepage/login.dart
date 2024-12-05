@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'home_page.dart';
-import 'signup.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -138,7 +137,6 @@ class _LoginPageState extends State<LoginPage> {
           .get();
 
       if (userDoc.exists) {
-        final String username = userDoc.data()?['username'] ?? 'User';
 
         // Tampilkan animasi login sukses dengan username
         Navigator.of(context).pop(); // Tutup spinner
