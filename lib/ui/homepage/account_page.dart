@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:local_events_app/styleguide.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:local_events_app/ui/homepage/EditProfile.dart';
+import 'package:local_events_app/ui/homepage/home_page.dart';
 // import 'package:image_picker/image_picker.dart';
 import 'login.dart';
 
@@ -13,6 +15,20 @@ class AccountPage extends StatefulWidget {
 
 class _AccountPage extends State<AccountPage> {
   final User? user = FirebaseAuth.instance.currentUser;
+
+  Future<String> _getUsername() async {
+    // Pastikan 'userUID' diubah dengan UID pengguna yang sesuai
+    var userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user?.uid)  // Menggunakan UID pengguna yang sedang login
+        .get();
+    
+    if (userDoc.exists) {
+      return userDoc['username']; // Ambil username dari Firestore
+    } else {
+      return 'Username tidak ditemukan';
+    }
+  }
 
   bool light1 = false;
 
@@ -43,7 +59,11 @@ class _AccountPage extends State<AccountPage> {
                       children: <Widget>[
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(context, '/HomePage'); // Navigasi kembali ke halaman sebelumnya
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => HomePage()),
+                              (Route<dynamic> route) => false,  // Menghapus semua halaman sebelumnya
+                            ); // Navigasi kembali ke halaman sebelumnya
                           },
                           child: Icon(
                             Icons.arrow_back,
@@ -65,10 +85,23 @@ class _AccountPage extends State<AccountPage> {
                     radius: 60
                   ),
                   SizedBox(height: 16),
-                  // Display updated username
-                  Text(
-                    user!.displayName ?? "No Username",
-                    style: whiteHeadingTextStyle.copyWith(fontSize: 24),
+                  // Gunakan FutureBuilder untuk menampilkan username
+                  FutureBuilder<String>(
+                    future: _getUsername(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Terjadi kesalahan', style: TextStyle(color: Colors.white));
+                      } else if (snapshot.hasData) {
+                        return Text(
+                          snapshot.data ?? "No Username",
+                          style: whiteHeadingTextStyle.copyWith(fontSize: 24),
+                        );
+                      } else {
+                        return Text("Username tidak ditemukan", style: TextStyle(color: Colors.white));
+                      }
+                    },
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -85,7 +118,10 @@ class _AccountPage extends State<AccountPage> {
                           icon: Icons.edit,
                           label: "Edit Profil",
                           onTap: () {
-                            Navigator.pushNamed(context, '/EditProfilePage').then((_) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => EditProfilePage()),
+                            ).then((_) {
                               _reloadUserInfo(); // Refresh user info after edit
                             });
                           },
@@ -164,7 +200,11 @@ class _AccountPage extends State<AccountPage> {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pushNamed(context, '/LoginPage');
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => LoginPage()),
+                    (Route<dynamic> route) => false,  // Menghapus semua halaman sebelumnya
+                  );
                 },
                 child: Text("Keluar"),
               ),

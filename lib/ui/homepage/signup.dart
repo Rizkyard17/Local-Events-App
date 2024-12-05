@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:lottie/lottie.dart';
 import 'login.dart';
 
@@ -9,25 +10,29 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> _signup() async {
+    final String username = _usernameController.text.trim();
     final String email = _emailController.text.trim();
     final String password = _passwordController.text.trim();
+    final String confirmPassword = _confirmPasswordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Email dan Password tidak boleh kosong!")),
+        SnackBar(content: Text("Isi semua form dengan benar!")),
       );
       return;
     }
     // Validasi password
-    if (_passwordController.text != _confirmPasswordController.text) {
+    if (_confirmPasswordController.text != _passwordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password tidak cocok')),
+        SnackBar(content: Text('Password tidak sama, silahkan masukkan password yang benar')),
       );
       return;
     }
@@ -41,12 +46,19 @@ class _SignupPageState extends State<SignupPage> {
 
       // Kirim email verifikasi
       User? user = userCredential.user;
+
       if (user != null && !user.emailVerified) {
 
         await user.sendEmailVerification();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Email verifikasi telah dikirim!")),
         );
+
+        // Simpan data pengguna ke Firestore
+        await _firestore.collection('users').doc(user.uid).set({
+          'username': username,
+          'email': email,
+        });
       }
 
       // Update profil pengguna dengan nama (opsional)
@@ -143,6 +155,20 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       SizedBox(height: 32),
                       SizedBox(height: 16),
+
+                      TextFormField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.email, color: Color(0xFF78B3CE)),
+                          hintText: "Username",
+                          hintStyle: TextStyle(color: Color(0xFF78B3CE)),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.9),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                      ),
                       // Email Input
                       TextFormField(
                         controller: _emailController,
@@ -213,9 +239,10 @@ class _SignupPageState extends State<SignupPage> {
                       // Opsi Login
                       TextButton(
                         onPressed: (){
-                          Navigator.pushReplacement(
+                          Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (context) => LoginPage()),
+                            (Route<dynamic> route) => false,  // Menghapus semua halaman sebelumnya
                           );
                         },
                         child: Text(

@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.0.5
   firebase_auth: ^5.3.3
+  cloud_firestore: ^5.5.1
   lottie: ^2.7.0
   # sqflite: ^2.2.8
   # image_picker: ^0.8.7+5

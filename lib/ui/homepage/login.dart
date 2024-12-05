@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lottie/lottie.dart';
 import 'home_page.dart';
 import 'signup.dart';
@@ -13,59 +14,149 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  
+  Future<void> _saveLoginData(String email) async {
+  final CollectionReference users = FirebaseFirestore.instance.collection('users');
 
+  try {
+    await users.add({
+      'email': email,
+      'login_time': FieldValue.serverTimestamp(),
+    });
+    print("Data login berhasil disimpan.");
+  } catch (e) {
+    print("Error menyimpan data login: $e");
+  }
+  }
+
+  // Future<void> _login() async {
+  //   final String email = _emailController.text.trim();
+  //   final String password = _passwordController.text.trim();
+
+  //   // Validasi input kosong
+  //   if (email.isEmpty || password.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Email dan Password tidak boleh kosong!")),
+  //     );
+  //     return;
+  //   }
+
+  //   // Fokus keluar dari keyboard
+  //   FocusScope.of(context).unfocus();
+
+  //   // Tampilkan loading spinner
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (context) => const Center(
+  //       child: CircularProgressIndicator(),
+  //     ),
+  //   );
+
+  //   try {
+  //     // Login pengguna
+  //     UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+  //       email: email,
+  //       password: password,
+  //     );
+
+  //     User? user = userCredential.user;
+
+  //     // Periksa apakah pengguna telah memverifikasi email
+  //     if (user != null && !user.emailVerified) {
+  //       // Tutup loading spinner
+  //       DocumentSnapshot userDoc =
+  //         await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+  //     }
+
+  //     if (user != null) {
+  //   // Ambil data pengguna dari Firestore
+  //   DocumentSnapshot userDoc =
+  //       await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+  //   if (userDoc.exists) {
+  //     String username = userDoc['username'];
+
+  //     // Tampilkan animasi login sukses dengan username
+  //     _showLoginSuccessAnimation(String username);
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Data $username tidak ditemukan!")),
+  //     );
+  //   }
+  //   }
+
+  //     // Simpan data login ke Firestore
+  //     await _saveLoginData(email);
+
+  //     // Tampilkan animasi Lottie sebagai konfirmasi login sukses
+  //     _showLoginSuccessAnimation();
+  //   } catch (e) {
+  //     // Tutup loading spinner jika terjadi error
+  //     Navigator.of(context).pop();
+
+  //     // Tampilkan pesan error
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Login Gagal: ${e.toString()}")),
+  //     );
+  //   }
+  // }
   Future<void> _login() async {
-    final String email = _emailController.text.trim();
-    final String password = _passwordController.text.trim();
+  final String email = _emailController.text.trim();
+  final String password = _passwordController.text.trim();
 
-    // Validasi input kosong
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Email dan Password tidak boleh kosong!")),
-      );
-      return;
-    }
+  if (email.isEmpty || password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Email dan Password tidak boleh kosong!")),
+    );
+    return;
+  }
 
-    // Fokus keluar dari keyboard
-    FocusScope.of(context).unfocus();
+  FocusScope.of(context).unfocus();
 
-    // Tampilkan loading spinner
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+
+  try {
+    UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
     );
 
-    try {
-      // Login pengguna
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+    User? user = userCredential.user;
 
-      User? user = userCredential.user;
+    if (user != null) {
+      // Ambil data username dari Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
-      // Periksa apakah pengguna telah memverifikasi email
-      if (user != null && !user.emailVerified) {
-        // Tutup loading spinner
-        _showVerificationDialog(user);
-        return;
+      if (userDoc.exists) {
+        final String username = userDoc.data()?['username'] ?? 'User';
+
+        // Tampilkan animasi login sukses dengan username
+        Navigator.of(context).pop(); // Tutup spinner
+        _showLoginSuccessAnimation();
+      } else {
+        Navigator.of(context).pop(); // Tutup spinner
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Data pengguna tidak ditemukan!")),
+        );
       }
-
-      // Tampilkan animasi Lottie sebagai konfirmasi login sukses
-      _showLoginSuccessAnimation();
-    } catch (e) {
-      // Tutup loading spinner jika terjadi error
-      Navigator.of(context).pop();
-
-      // Tampilkan pesan error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login Gagal: ${e.toString()}")),
-      );
     }
+  } catch (e) {
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Login Gagal: ${e.toString()}")),
+    );
   }
+}
 
   void _showVerificationDialog(User user) {
     showDialog(
@@ -127,7 +218,11 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.pushNamed(context, '/HomePage');
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+        (Route<dynamic> route) => false,  // Menghapus semua halaman sebelumnya
+      );
     });
   }
 

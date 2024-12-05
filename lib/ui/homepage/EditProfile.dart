@@ -1,32 +1,54 @@
-// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:image_picker/image_picker.dart';
-import 'account_page.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:local_events_app/styleguide.dart';
 
 class EditProfilePage extends StatefulWidget {
   @override
-  _EditProfilePage createState() => _EditProfilePage();
+  _EditProfilePageState createState() => _EditProfilePageState();
 }
 
-class _EditProfilePage extends State<EditProfilePage> {
+class _EditProfilePageState extends State<EditProfilePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late TextEditingController usernameController;
   late TextEditingController emailController;
-  late TextEditingController passwordController;
+  final User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
     usernameController = TextEditingController();
     emailController = TextEditingController();
-    passwordController = TextEditingController();
 
-    // Load current user info
     var user = _auth.currentUser;
+    // Load current user info
     if (user != null) {
-      usernameController.text = user.displayName ?? '';
-      emailController.text = user.email ?? '';
+      emailController.text = user.email ?? "Email tidak ditemukan";
+
+      // Load username dari Firestore jika tidak ditemukan di FirebaseAuth
+      _getUsername().then((username) {
+        setState(() {
+          usernameController.text = username;
+        });
+      });
+    }
+  }
+
+  Future<String> _getUsername() async {
+    try {
+      var userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid) // Ambil UID dari user yang sedang login
+          .get();
+
+      if (userDoc.exists) {
+        return userDoc['username'] ?? "Username tidak ditemukan";
+      } else {
+        return "Username tidak ditemukan";
+      }
+    } catch (e) {
+      print("Error fetching username: $e");
+      return "Error memuat username";
     }
   }
 
@@ -35,19 +57,23 @@ class _EditProfilePage extends State<EditProfilePage> {
       User? user = _auth.currentUser;
 
       if (user != null) {
-        await user.updateDisplayName(usernameController.text); // Update username
+        // Update display name di FirebaseAuth
+        await user.updateDisplayName(usernameController.text);
+
+        // Update username di Firestore
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({'username': usernameController.text});
+
         await user.reload();
-        user = _auth.currentUser;
-
-        // Optionally: Update other fields like email or password
-        // await user.updateEmail(emailController.text);
-        // await user.updatePassword(passwordController.text);
-
-        Navigator.pushNamed(context, '/AccountPage');
+        Navigator.pop(context, "/AccountPage");
       }
     } catch (e) {
-      // Handle errors (e.g., invalid email format, etc.)
       print("Error updating profile: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal memperbarui profil")),
+      );
     }
   }
 
@@ -58,9 +84,7 @@ class _EditProfilePage extends State<EditProfilePage> {
         children: [
           // Background Gradient
           Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFF78B3CE)
-            ),
+            decoration: const BoxDecoration(color: Color(0xFF78B3CE)),
           ),
           SafeArea(
             child: Center(
@@ -82,6 +106,29 @@ class _EditProfilePage extends State<EditProfilePage> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
+                      // Menampilkan Username Awal
+                      FutureBuilder<String>(
+                        future: _getUsername(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text(
+                              "Gagal memuat data",
+                              style: TextStyle(color: Colors.white),
+                            );
+                          } else {
+                            return Text(
+                              "Silahkan Isi Form untuk perbarui profil kamu!",
+                              style: whiteHeadingTextStyle.copyWith(
+                              fontSize: 20,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 24),
                       // Email Input
                       _buildTextField(
                         controller: emailController,
@@ -103,12 +150,10 @@ class _EditProfilePage extends State<EditProfilePage> {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/AccountPage');
+                          Navigator.pop(context);
                         },
                         child: const Text("Kembali"),
                       ),
-                      const SizedBox(height: 16),
-                      // Forgot Password or Sign Up Text
                     ],
                   ),
                 ),
